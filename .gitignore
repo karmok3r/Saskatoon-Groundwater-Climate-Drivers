@@ -1,0 +1,7 @@
+WSA_data_request_email.txt
+__pycache__/
+data/wsa_pdfs/*.pdf
+# manuscript and results stay local until publication
+paper/
+results/
+figures/
