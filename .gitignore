@@ -5,3 +5,6 @@ data/wsa_pdfs/*.pdf
 paper/
 results/
 figures/
+data/basemap/
+.venv_pastas/
+make_kml.py

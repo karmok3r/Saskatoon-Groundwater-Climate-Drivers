@@ -10,6 +10,7 @@ Also adds cumulative water-balance anomalies (precipitation minus
 evaporation, 12/24/36/60 months), the slow driver expected for prairie
 aquifers, and draws figures/regional_storage.png.
 """
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,6 +22,7 @@ OUT = Path("data/drivers_monthly.csv")
 FIG = Path("figures/regional_storage.png")
 WINDOWS = [12, 24, 36, 60]  # months
 PLOT_WELL = "WSA Dalmeny"
+PROVINCE = False
 
 ERA5_RENAME = {
     "total_precipitation_sum": "precip_mm",
@@ -111,6 +113,8 @@ def main():
     for col in ["precip_mm", "tc_pr", "grace_lwe_cm"]:
         print(f"  {col}: {df.groupby('name')[col].count().iloc[0]}")
 
+    if PROVINCE:
+        return
     d = df[(df.name == PLOT_WELL) & df.grace_lwe_cm.notna()]
     for w in WINDOWS:
         r = d.grace_lwe_cm.corr(d[f"pme_{w}m_anom_mm"])
@@ -120,4 +124,8 @@ def main():
 
 
 if __name__ == "__main__":
+    # `python build_drivers.py province` merges the province-wide exports
+    PROVINCE = len(sys.argv) > 1 and sys.argv[1] == "province"
+    if PROVINCE:
+        GEE, OUT = Path("data/gee_province"), Path("data/drivers_monthly_province.csv")
     main()

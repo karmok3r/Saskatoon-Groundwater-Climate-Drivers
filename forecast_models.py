@@ -16,8 +16,8 @@ Every model is scored on the same samples. Skill is reported against
 persistence (SS = 1 - MSE_model / MSE_persistence), with a 95% interval from
 resampling calendar years (1000 bootstrap draws).
 
-Writes results/forecast_*.csv and figures/skill_vs_horizon.png,
-figures/skill_by_well.png, figures/shap_*.png.
+Writes results/<scope>/forecast_*.csv and figures/<scope>/skill_vs_horizon.png,
+skill_by_well.png and shap.png. Run with GW_SCOPE=province for all wells.
 """
 import warnings
 from pathlib import Path
@@ -33,10 +33,9 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from common import FLAGGED, SHORT, merged, nse
+from common import FIG, FLAGGED, RES, SHORT, merged, nse
 
 warnings.filterwarnings("ignore")
-RES, FIG = Path("results"), Path("figures")
 HORIZONS = [1, 3, 6, 12]
 BLOCKS = [(1990, 1994), (1995, 1999), (2000, 2004), (2005, 2009),
           (2010, 2014), (2015, 2019), (2020, 2026)]
@@ -256,7 +255,7 @@ def skill_figure(tab):
 def well_figure(pw, model):
     d = pw[pw.model == model].pivot(index="name", columns="horizon", values="skill_vs_persistence")
     d = d.loc[d[12].sort_values().index]
-    fig, ax = plt.subplots(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(5, max(5, 0.22 * len(d) + 1)))
     im = ax.imshow(d.values, cmap="RdBu", vmin=-0.6, vmax=0.6, aspect="auto")
     ax.set_xticks(range(len(d.columns)), [f"{h} mo" for h in d.columns])
     ax.set_yticks(range(len(d)), [SHORT[n] + (" *" if n in FLAGGED else "") for n in d.index])
@@ -292,7 +291,6 @@ def shap_analysis():
 
 
 def main():
-    RES.mkdir(exist_ok=True)
     preds = pd.concat([run_horizon(h) for h in HORIZONS])
     preds.to_csv(RES / "forecast_predictions.csv", index=False, float_format="%.4f")
     models = ["Persistence", "Seasonal persistence", "Ridge", "Random Forest", "XGBoost", "LSTM",
